@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox-multitool
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox-multitool
+  template:
+    metadata:
+      labels:
+        app: busybox-multitool
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        command: ["sh", "-c", "while true; do echo $(date) >> /mnt/shared/busybox_output.txt; sleep 5; done"]
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /mnt/shared
+      - name: multitool
+        image: wbitt/network-multitool
+        command: ["sh", "-c", "tail -f /mnt/shared/busybox_output.txt"]
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /mnt/shared
+      volumes:
+      - name: shared-volume
+        persistentVolumeClaim:
+          claimName: shared-pvc
